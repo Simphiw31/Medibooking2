@@ -89,14 +89,68 @@ $userRow=mysqli_fetch_array($res,MYSQLI_ASSOC);
                             <h2 class="page-header">
                             Dashboard
                             </h2>
-                           <ol class="breadcrumb">
-                                <li class="active">
-                                    <div class="pull-left"id="piechart"></div>
-                                </li>
-                            </ol><div style="text-align:center">
-                            show appointments from : <input type="date" id="date" name="appdate" value="<?php echo date("Y-m-d")?>"/>
-                            &nbsp;&nbsp;&nbsp;to &nbsp;&nbsp;&nbsp; <input type="date" id="date" name="appdate1" value="<?php echo date('Y-m-t')?>">
-                        <br><br></div></div>
+                            <form action="<?php $_PHP_SELF ?>" method="post" >
+				<div style="text-align:center">
+				<!-- maintaining dropdown state -->
+				<?php
+    $quer = "SELECT * from doctor order by doctorLastName ";
+
+    $result=mysqli_query($con,$quer);
+
+    $appStatus='';
+    $sortby='';
+    if (isset($_POST))
+        if (is_array($_POST)){
+            if (isset($_POST['appointmentStatus'])){
+                $appStatus = $_POST['appointmentStatus'];
+                $sortby =$_POST['sort'];
+            }
+            if(isset($_POST['appdate'])){
+                $appdat=date($_POST['appdate']);
+                $appdat1=date($_POST['appdate1']);
+            }else {
+                $appdat = date('Y-m-d');
+                $appdat1 = date('Y-m-t');
+
+            }
+        }     
+				?>
+                For &nbsp;&nbsp;&nbsp;
+								<select name="doctor" >
+									<option value="%">All Doctors</option>
+									<?php
+									while ($doctors=mysqli_fetch_array($result)) {
+                                    ?><option value="<?php echo $doctors["doctor_id"]?>">Dr <?php echo substr($doctors["doctorFirstName"],0,1)." " .$doctors["doctorLastName"]?> </option>;<?php
+									}
+                                    echo"</select>";?>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			Show :
+			<select name="appointmentStatus">
+				
+				<option value="%">All Appointments</option>
+				<option value="Attended" <?php if($appStatus=='Attended') echo ' selected="selected"'; ?>>All Attended Appointments</option>
+				<option value="Pending" <?php if($appStatus=='Pending') echo ' selected="selected"'; ?>>All Pending Appointments</option>
+				<option value="Missed" <?php if($appStatus=='Missed') echo ' selected="selected"'; ?>>All Missed Appointments</option>
+				<option value="Cancelled" <?php if($appStatus=='Cancelled') echo ' selected="selected"'; ?>>All Canceled Appointments</option>
+				
+			</select>
+			Sort By: <select  name='sort'>
+			<option disabled >Ascending</option>
+                         <option value='schedule_status ASC' <?php if($sortby=='schedule_status ASC') echo ' selected="selected"'; ?>>Schedule Status  </option>
+					   <option value='schedule_date ,schedule_startTime ASC' <?php if($sortby=='schedule_date ,schedule_startTime ASC') echo ' selected="selected"'; ?>>Schedule Date  &nbsp;&nbsp;&nbsp;&nbsp;</option>
+					   <option disabled >----------</option>
+					   <option disabled >Descending</option>
+					   <option value='schedule_status DESC' <?php if($sortby=='schedule_status DESC') echo ' selected="selected"'; ?>>Schedule Status  </option>
+					   
+                       <option value='schedule_date,schedule_startTime DESC' <?php if($sortby=='schedule_date,schedule_startTime DESC') echo ' selected="selected"'; ?>>Schedule Date  &nbsp;&nbsp;&nbsp;&nbsp;</option>
+                                
+                                 </select>
+			&nbsp;&nbsp;&nbsp;&nbsp;
+			show from : <input type="date" id="date" name="appdate" value="<?php echo date("Y-m-d")?>"/>
+			&nbsp;&nbsp;&nbsp;to &nbsp;&nbsp;&nbsp; <input type="date" id="date" name="appdate1" value="<?php echo date('Y-m-t')?>">
+			&nbsp;&nbsp;&nbsp;<button class='btn btn-primary' type='submit' value='submit2' name='submit2'>Show Only</button>
+		</div>
+		</form><br>
 </div>
                     </div>
                     <!-- Page Heading end-->
@@ -127,7 +181,8 @@ $userRow=mysqli_fetch_array($res,MYSQLI_ASSOC);
                             </thead>
                             
                             <?php 
-                            $res=mysqli_query($con,"SELECT a.*, b.*,c.*,d.*
+                            if(!isset($_POST['submit2'])){
+                            $res1=mysqli_query($con,"SELECT a.*, b.*,c.*,d.*
                                                     FROM patient a
                                                     JOIN appointment b
                                                     On a.patient_id = b.patient_id
@@ -135,12 +190,31 @@ $userRow=mysqli_fetch_array($res,MYSQLI_ASSOC);
                                                     On b.schedule_id=c.schedule_id
                                                     JOIN doctor d
                                                     ON c.doctor_id=d.doctor_id
-                                                    ");//ORDER BY ".$this->select->post('sort')." ASC");
-                                  if (!$res) {
+                                                    ");
+
+                            }else{
+                            $doctor=$_POST['doctor'];
+                            $appStatus=$_POST['appointmentStatus'];
+                            $sortby=$_POST['sort'];
+                            $date1 = $_POST['appdate1'];
+	                        $date = $_POST['appdate'];
+                            $res1=mysqli_query($con,"SELECT a.*, b.*,c.*,d.*
+                            FROM patient a
+                            JOIN appointment b
+                            On a.patient_id = b.patient_id
+                            JOIN schedule c
+                            On b.schedule_id=c.schedule_id
+                            JOIN doctor d
+                            ON c.doctor_id=d.doctor_id
+                            WHERE b.doctor_id LIKE '$doctor'
+                            AND appointment_status LIKE '$appStatus'
+                            AND schedule_date BETWEEN '$date' AND '$date1'");
+                            }
+                                  if (!$res1) {
                                     printf("Error: %s\n", mysqli_error($con));
                                     exit();
                                 }
-                            while ($appointment=mysqli_fetch_array($res)) {
+                            while ($appointment=mysqli_fetch_array($res1)) {
                                 
                                 if (strtolower($appointment['appointment_status'])=='pending') {
                                     $status="danger";
@@ -172,35 +246,7 @@ $userRow=mysqli_fetch_array($res,MYSQLI_ASSOC);
                       
                        
                       
-                       echo "<div style='text-align:center'>
-                       <br>
-                       <td >&nbsp;&nbsp;Sort By: <select style='text-align:center' name='sort'>
-                                             <option value='patient_id'>patient Id&nbsp;&nbsp;&nbsp;&nbsp;</option>
-                                             <option value='patientLastName'>Name</option>
-                           
-                            </select>
-                            <!-- adding spaces in between the drop down -->
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"  ;
-                            $sql2 ="SELECT DISTINCT a.doctor_id doctor_id,substr(doctorFirstName,1,1) doctorFirstName,doctorLastName FROM doctor a ,appointment b WHERE a.doctor_id=b.doctor_id";
-                            $res2 = mysqli_query($con,$sql2);
-                            if (!$res) {
-                                printf("Error: %s\n", mysqli_error($con));
-                                exit();
-                            }echo"Show appointments for: <select style='text-align:center' name='sort'>
-                                             <option value='%'>All Doctors&nbsp;&nbsp;&nbsp;&nbsp;</option>";
-                            while ($doctors=mysqli_fetch_array($res2)) {
-                                    ?><option value="<?php $doctors["doctor_id"]?>">Dr <?php echo $doctors["doctorFirstName"]." " .$doctors["doctorLastName"]?> </option>;<?php
-                            }
-                                    echo"</select>
-                                    <!-- adding spaces in between the drop down -->
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"  ;
-                                    echo "Show by appointment Status : <select>
-                                    <option value='%'>All Appointments&nbsp;&nbsp;&nbsp;&nbsp;</option>
-                                    <option value='Pending'>Pending</option>
-                                    <option value='Missed'>Missed</option>
-                                    <option value='Canceled'>Canceled</option>
-                   </select>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"  ; 
-                   echo "<div>";
+              
                    echo "<div class='panel panel-default'>";
                    echo "<div class='col-md-offset-3 pull-right'>";
                        echo "<button class='btn btn-primary' type='submit' value='Submit' name='submit'>Update</button>";

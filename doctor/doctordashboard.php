@@ -90,7 +90,7 @@ $userRow=mysqli_fetch_array($res,MYSQLI_ASSOC);
                             Dashboard
                             </h2>
                            <ol class="breadcrumb">
-                                <li class="active">
+                                <li style = "text-align:center" class="active">
                                     <div class="pull-left"id="piechart"></div>
                                     
                                 </li>
@@ -101,7 +101,9 @@ $userRow=mysqli_fetch_array($res,MYSQLI_ASSOC);
                     <!-- Page Heading end-->
 <!-- panel start -->
 <div class="panel panel-primary filterable">
+    
                         <!-- Default panel contents -->
+
                        <div class="panel-heading">
                        
                         <h3 class="panel-title">Mini Report</h3>
@@ -123,7 +125,8 @@ $userRow=mysqli_fetch_array($res,MYSQLI_ASSOC);
                             
                             <?php 
                             $res=mysqli_query($con,"SELECT count(*) as total1,sum(a.appointment_status='Attended') as total2,sum(a.appointment_status!='Attended') as total  
-                                                    from appointment a");
+                                                    from appointment a
+                                                    WHERE a.doctor_id=".$usersession);
                                   if (!$res) {
                                     printf("Error: %s\n", mysqli_error($con));
                                     exit();
@@ -174,9 +177,59 @@ $userRow=mysqli_fetch_array($res,MYSQLI_ASSOC);
 
                     </div>
                 </div>
-                <div style="text-align:center" >show appointments from : <input method="post" type="date" id="date" name="appdate" value="<?php echo date("Y-m-d")?>"/>
-                            &nbsp;&nbsp;&nbsp;to &nbsp;&nbsp;&nbsp; <input method="post" type="date" id="date" name="appdate1" value="<?php echo date('Y-m-t')?>">
-                        <br><br></div>
+                <form action="<?php $_PHP_SELF ?>" method="post" >
+				<div style="text-align:center">
+				<!-- maintaining dropdown state -->
+				<?php
+    
+    $appStatus='';
+    $sortby='';
+    if (isset($_POST))
+        if (is_array($_POST)){
+            if (isset($_POST['appointmentStatus'])){
+                $appStatus = $_POST['appointmentStatus'];
+                $sortby =$_POST['sort'];
+            }
+            if(isset($_POST['appdate'])){
+                $appdat=date($_POST['appdate']);
+                $appdat1=date($_POST['appdate1']);
+            }else {
+                $appdat = date('Y-m-d');
+                $appdat1 = date('Y-m-t');
+
+            }
+        }     
+				?>
+               
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			Show :
+			<select name="appointmentStatus">
+				
+				<option value="%">All Appointments</option>
+				<option value="Attended" <?php if($appStatus=='Attended') echo ' selected="selected"'; ?>>All Attended Appointments</option>
+				<option value="Pending" <?php if($appStatus=='Pending') echo ' selected="selected"'; ?>>All Pending Appointments</option>
+				<option value="Missed" <?php if($appStatus=='Missed') echo ' selected="selected"'; ?>>All Missed Appointments</option>
+				<option value="Cancelled" <?php if($appStatus=='Cancelled') echo ' selected="selected"'; ?>>All Canceled Appointments</option>
+				
+			</select>
+			Sort By: <select  name='sort'>
+			<option disabled >Ascending</option>
+            <option value='appointment ASC' <?php if($sortby=='appointment ASC') echo ' selected="selected"'; ?>>Appointment Date  &nbsp;&nbsp;&nbsp;&nbsp;</option>
+                       <option value='patient_id ASC' <?php if($sortby=='patient_id ASC') echo ' selected="selected"'; ?>>Patient ID  </option>
+                       <option value='patientLastName,patientFirstName ASC' <?php if($sortby=='patientLastName,patientFirstName ASC') echo ' selected="selected"'; ?>>Patient Name  </option>
+                       <option disabled >----------</option>
+					   <option disabled >Descending</option>
+                       <option value='appointment DESC' <?php if($sortby=='appointment DESC') echo ' selected="selected"'; ?>>Appointment Date  &nbsp;&nbsp;&nbsp;&nbsp;</option>
+                       <option value='patient_id DESC' <?php if($sortby=='patient_id DESC') echo ' selected="selected"'; ?>>Patient ID  </option>
+                       <option value='patientLastName,patientFirstName DESC' <?php if($sortby=='patientLastName,patientFirstName DESC') echo ' selected="selected"'; ?>>Patient Name  </option>
+                                
+                                 </select>
+			&nbsp;&nbsp;&nbsp;&nbsp;
+			show from : <input type="date" id="date" name="appdate" value="<?php echo date("Y-m-d")?>"/>
+			&nbsp;&nbsp;&nbsp;to &nbsp;&nbsp;&nbsp; <input type="date" id="date" name="appdate1" value="<?php echo date('Y-m-t')?>">
+			&nbsp;&nbsp;&nbsp;<button class='btn btn-primary' type='submit' value='submit2' name='submit2'>Show Only</button>
+		</div>
+		</form><br>
                     <!-- panel end1 -->
                     
 
@@ -203,7 +256,8 @@ $userRow=mysqli_fetch_array($res,MYSQLI_ASSOC);
                                    
                                     
                                     <th><input type="text" class="form-control" placeholder="Symptom" disabled></th>
-                                    <th><input type="text" class="form-control" placeholder="Comment" disabled></th>
+                                    <th><input type="text" class="form-control" placeholder="Diagnoses" disabled></th>
+                                    <th><input type="text" class="form-control" placeholder="Clinical notes" disabled></th>th>
                                     <th><input type="text" class="form-control" placeholder="Status" disabled></th>
                                     <th><input type="text" class="form-control" placeholder="Complete" disabled></th>
                                     <th><input type="text" class="form-control" placeholder="Print" disabled></th>
@@ -211,15 +265,31 @@ $userRow=mysqli_fetch_array($res,MYSQLI_ASSOC);
                             </thead>
                             
                             <?php 
-                            $res=mysqli_query($con,"SELECT a.*, b.*,c.*
-                                                    FROM patient a
-                                                    JOIN appointment b
-                                                    On a.patient_id = b.patient_id
-                                                    JOIN schedule c
-                                                    On b.schedule_id=c.schedule_id
-                                                    ");//WHERE schedule_date BETWEEN ".$this->input->post('appdate').  CAN'T GET WITH DATES
-                                                    //" AND " .$this->input->post('appdate1')."") ;
+                            if(!isset($_POST['submit2'])){
+                                $res=mysqli_query($con,"SELECT a.*, b.*,c.*
+                                                        FROM patient a
+                                                        JOIN appointment b
+                                                        On a.patient_id = b.patient_id
+                                                        JOIN schedule c
+                                                        On b.schedule_id=c.schedule_id
+                                                        WHERE b.doctor_id = ".$usersession);
+                            }else{
+                                $status=$_POST['appointmentStatus'];
+                                $sortby=$_POST['sort'];
+                                $date1 = $_POST['appdate1'];
+	                        $date = $_POST['appdate'];
+                                $res=mysqli_query($con,"SELECT a.*, b.*,c.*
+                                                        FROM patient a
+                                                        JOIN appointment b
+                                                        On a.patient_id = b.patient_id
+                                                        JOIN schedule c
+                                                        On b.schedule_id=c.schedule_id
+                                                        WHERE b.doctor_id = '$usersession'
+                                                        AND b.appointment_status  LIKE '$status'
+                                                        AND schedule_date BETWEEN '$date' AND '$date1'
+                                                        ORDER BY '$sortby'");
 
+                            }
                                                     
                                   if (!$res) {
                                     printf("Error: %s\n", mysqli_error($con));
@@ -241,12 +311,13 @@ $userRow=mysqli_fetch_array($res,MYSQLI_ASSOC);
                                 echo "<tbody>";
                                 echo "<tr class='$status'>";
                                     echo "<td>" . $appointment['patient_id'] . "</td>";
-                                    echo "<td>" . $appointment['patientLastName'] . "</td>";
+                                    echo "<td>" . $appointment['patientLastName'] . " " . $appointment['patientFirstName'] . "</td>";
                                     echo "<td>" . $appointment['schedule_date'] . "</td>";
                                     echo "<td>" . $appointment['schedule_startTime'] . "</td>";
                                     echo "<td>" . $appointment['schedule_endTime'] . "</td>";
                                     echo "<td>" . $appointment['appointment_symptoms'] . "</td>";
                                     echo "<td>" . $appointment['appointment_diagnoses'] . "</td>";
+                                    echo "<td>" . $appointment['appointment_clinicalNotes'] . "</td>";
                                     echo "<td><span class='fa fa-calendar-".$icon."' aria-hidden='true'></span>".' '."". $appointment['appointment_status'] . "</td>";
                                     echo "<form method='POST'>";
                                     echo "<td class='text-center'><input type='checkbox' name='enable' id='enable' value='".$appointment['appointment_ID']."' onclick='chkit(".$appointment['appointment_ID'].",this.checked);' ".$checked."></td>";
@@ -257,23 +328,24 @@ $userRow=mysqli_fetch_array($res,MYSQLI_ASSOC);
                                     echo "</tbody>"; 
                                 echo "</table>";
                               
-                            echo "<div style='text-align:center'>
-                            <br>
-                            <td >&nbsp;&nbsp;Sort By: <select style='text-align:center' name='sort'>
-                                                  <option value='patient_id'>patient Id&nbsp;&nbsp;&nbsp;&nbsp;</option>
-                                                  <option value='patientLastName'>Name</option>
+                        //     echo "<div style='text-align:center'>
+                        //     <br>
+                        //     <td >&nbsp;&nbsp;Sort By: <select style='text-align:center' name='sort'>
+                        //                           <option value='patient_id'>patient Id&nbsp;&nbsp;&nbsp;&nbsp;</option>
+                        //                           <option value='patientLastName,patientFirstName'>Patient Name</option>
+                        //                           <option value='schedule_date,schedule_startTime'>Appointment Date and Time</option>
                                 
-                                 </select>
-                                 <!-- adding spaces in between the drop down -->
-                                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                         <!-- adding spaces in between the drop down -->
-                                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"  ;
-                                         echo "Show by appointment Status : <select>
-                                         <option value='%'>All Appointments&nbsp;&nbsp;&nbsp;&nbsp;</option>
-                                         <option value='Pending'>Pending</option>
-                                         <option value='Missed'>Missed</option>
-                                         <option value='Canceled'>Canceled</option>
-                        </select>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"  ; 
+                        //          </select>
+                        //          <!-- adding spaces in between the drop down -->
+                        //          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        //                  <!-- adding spaces in between the drop down -->
+                        //          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"  ;
+                        //                  echo "Show by appointment Status : <select>
+                        //                  <option value='%'>All Appointments&nbsp;&nbsp;&nbsp;&nbsp;</option>
+                        //                  <option value='Pending'>Pending</option>
+                        //                  <option value='Missed'>Missed</option>
+                        //                  <option value='Canceled'>Canceled</option>
+                        // </select>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"  ; 
                        echo "<div class='panel panel-default'>";
                        echo "<div class='col-md-offset-3 pull-right'>";
                        

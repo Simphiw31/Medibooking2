@@ -11,47 +11,148 @@ $res=mysqli_query($con,"SELECT * FROM receptionist WHERE receptionistEmail= '$us
 $userRow=mysqli_fetch_array($res,MYSQLI_ASSOC);
 // insert
 
-// Adding a schedule dont work still in progress
-if (isset($_POST['submit'])) {
-$date = mysqli_real_escape_string($con,$_POST['date']);
-$starttime     = mysqli_real_escape_string($con,$_POST['starttime']);
-$endtime     = mysqli_real_escape_string($con,$_POST['endtime']);
-$bookavail         = 'Available';
-$duration = mysqli_real_escape_string($con,$_POST['appointmentDuration']);
-$rec_id = $userRow['receptionist_id'];
-$doc_id = mysqli_real_escape_string($con,$_POST['doctor']);
-//INSERT
-if($_POST['appointmentType']=='daily'){
-    $time = strtotime($starttime);
-    while($time<=$endtime){
-    $query = " INSERT INTO schedule (  schedule_date, schedule_startTime, schedule_endTime,  schedule_status ,receptionist_id,doctor_id)
-    VALUES ( '$date', '$starttime', '$time', '$bookavail' ,'$rec_id','$doc_id') ";
-     
-    $time = strtotime('+'.$duration,strtotime($time));
+// Adding a schedule 
+        if (isset($_POST['submit'])) {
+
+            $date = mysqli_real_escape_string($con,$_POST['date']);
+            $starttime     = strtotime(mysqli_real_escape_string($con,$_POST['starttime']));
+            $endtime     = strtotime(mysqli_real_escape_string($con,$_POST['endtime']));
+            $bookavail         = 'Available';
+            $duration = mysqli_real_escape_string($con,$_POST['appointmentDuration']);
+            $rec_id = $userRow['receptionist_id'];
+            $doc_id = mysqli_real_escape_string($con,$_POST['doctor']);
+        //INSERT
+            $appType = mysqli_real_escape_string($con,$_POST['appointmentType']);
+                if($appType=='daily'){
+                    $time=$starttime;
+                    for($i=$starttime;$i<$endtime;$i=$i+$duration*60){
+                    $time = $time+$duration*60;    
+                    $it=date("H:i",$i);
+                    $times=date("H:i",$time);
+
+                    $query = " INSERT INTO schedule (  schedule_date , schedule_startTime , schedule_endTime , schedule_status , receptionist_id , doctor_id)
+                                VALUES ( '$date', '$it', '$times', '$bookavail' ,'$rec_id','$doc_id') ";
+                    
+                    
+                    
+                    $result = mysqli_query($con, $query);
+                    // echo $result;
+                }
+            
+                    if($result )
+                    {
+                        ?>
+                        <script type="text/javascript">
+                        alert('Schedule added successfully.');
+                        
+                        </script>
+                        <?php
+                        // exit();
+                    }
+                    else
+                    {
+                        ?>
+                        <script type="text/javascript">
+                        alert('Added fail. Please try again.');
+                        </script>
+                        <?php
+                    }
+                
+                }else if($appType=='weekly'){
+                    //Weekly Schedule Add also not working
+                    //trying to add schedule not working date manipulation not working as we thought
+                    $monday = date('Y-m-d',strtotime('monday this week') );
+                    $friday = date('Y-m-d',strtotime('firday this week') );    
+                    for($j=$monday;$j<=$friday;$j->modify('+1 day')){
+
+                        $time=$starttime;
+                        for($i=$starttime;$i<$endtime;$i=$i+$duration*60){
+                        $time = $time+$duration*60;    
+                        $it=date("H:i",$i);
+                        $times=date("H:i",$time);
     
-    $result = mysqli_query($con, $query);
-    // echo $result;
-    if(!$result )
-    {
-    ?>
-    <script type="text/javascript">
-    alert('Schedule added successfully.');
+                        $query = " INSERT INTO schedule (  schedule_date , schedule_startTime , schedule_endTime , schedule_status , receptionist_id , doctor_id)
+                                    VALUES ( '$date', '$it', '$times', '$bookavail' ,'$rec_id','$doc_id') ";
+                        
+                        
+                        // $starttime = strtotime('+'.$duration,strtotime($starttime));
+                        
+                        $result = mysqli_query($con, $query);
+                    
+                    }
+                
+                
+                        if($result )
+                        {
+                            ?>
+                            <script type="text/javascript">
+                            alert('Schedule added successfully.');
+                            
+                            </script>
+                            <?php
+                           
+                        }
+                        else
+                        {
+                            ?>
+                            <script type="text/javascript">
+                            alert('Added fail. Please try again.');
+                            </script>
+                            <?php
+                        }
+                }
+            }else{
+                //Monthly Schedule Add
+                //trying to add schedule not working date manipulation not working as we thought
+                $_POST['startdate'] = date("Y-m-d");
+                $d = new DateTime($_POST['startdate']);
+                $t = $d->getTimestamp();
+                for($x = $d ;$x<=date("y-m-t");$x->modify('+1 day')){
+                    $addDay=86400;
+                    $nextDay = date('w',($t+$addDay));
+                    if(!$nextDay==0 ||$nextDay==6){
+                        $time=$starttime;
+                    for($i=$starttime;$i<$endtime;$i=$i+$duration*60){
+                    $time = $time+$duration*60;    
+                    $it=date("H:i",$i);
+                    $times=date("H:i",$time);
+                    $xt = date('y-m-d',$x);
+                    $query = " INSERT INTO schedule (  schedule_date , schedule_startTime , schedule_endTime , schedule_status , receptionist_id , doctor_id)
+                                VALUES ( '$xt', '$it', '$times', '$bookavail' ,'$rec_id','$doc_id') ";
+                    
+                    
+                   
+                    
+                    $result = mysqli_query($con, $query);
+                  
+                }
+            
+                    if($result )
+                    {
+                        ?>
+                        <script type="text/javascript">
+                        alert('Schedule added successfully.');
+                        
+                        </script>
+                        <?php
+                        // exit();
+                    }
+                    else
+                    {
+                        ?>
+                        <script type="text/javascript">
+                        alert('Added fail. Please try again.');
+                        </script>
+                        <?php
+                    }
+                    }
+
+                }
+
+            }
     
-    </script>
-    <?php
-    exit();
     }
-    else
-    {
     ?>
-    <script type="text/javascript">
-    alert('Added fail. Please try again.');
-    </script>
-    <?php
-    }
-}}
-}
-?>
 
 
 
@@ -151,154 +252,76 @@ if($_POST['appointmentType']=='daily'){
                         </div>
                     </div>
                     <!-- Page Heading end-->
+                                               <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Add Schedule</button>
 
                     <!-- panel start -->
                     <div class="panel panel-primary">
 
-                        <!-- panel heading starat -->
-                        <div class="panel-heading">
-                            <h3 class="panel-title">Add Schedule</h3>
-                        </div>
-                        <!-- panel heading end -->
-                       
-                        <div class="panel-body">
-                        <!-- panel content start --> 
-                            <div class="bootstrap-iso">
-                             <div class="container-fluid">
-                              <div class="row">
-                               <div class="col-md-12 col-sm-12 col-xs-12">
-                                <form class="form-horizontal" method="post">
-                                <tr>
-														
-														<td>
-															<div style="text-align:center" class="radio">
-																<label><input type="radio" name="appointmentType" value="daily">Daily Schedule</label>
-															
-																<label><input type="radio" name="appointmentType" value="weekly">Weekly  Schedule</label>
-														
-																<label><input type="radio" name="appointmentType" value="monthly"?>Monthly Schedule</label>
-														
-															</div>
-														</td>
-													</tr>
-                                 <div class="form-group form-group-lg">
-                                  <label class="control-label col-sm-2 requiredField" for="date">
-                                   Date
-                                   <span class="asteriskField">
-                                    *
-                                   </span>
-                                  </label>
-                                  <div class="col-sm-5">
-                                   <div class="input-group">
-                                    <div class="input-group-addon">
-                                     <i class="fa fa-calendar">
-                                     </i>
-                                    </div>
-                                    <input class="form-control" id="date" name="date" type="text" required/>
-                                   </div>
-                                  </div>
-                                 </div>
-                                 <div class="form-group form-group-lg">
-                                  <label class="control-label col-sm-2 requiredField" for="scheduleday">
-                                   Doctor
-                                   <span class="asteriskField">
-                                    *
-                                   </span>
-                                  </label>
-                                  <div class="col-sm-5">
-                                   <select class="select form-control" id="doctor" name="doctor" required>
-                                   <?php $docSql = "SELECT doctor_id,substr(doctorFirstName,1,1) doctorFirstName,doctorLastName ,doctorSpecialty FROM doctor";
-                                        $docRes = mysqli_query($con,$docSql);
-                                      ?>  
-                                <option value="%">All Doctors</option>";<<?php
-                                while($doctor=mysqli_fetch_array($docRes)){
-                                    echo "<option value=". $doctor['doctor_id']."> Dr " .$doctor['doctorFirstName']." ". $doctor['doctorLastName']." (".$doctor['doctorSpecialty']. ")</option>";
-                                }
-                                echo "</select>"
-
-                        ?>
-                                   </select>
-                                  </div>
-                                 </div>
-                                 <div class="form-group form-group-lg">
-                                  <label class="control-label col-sm-2 requiredField" for="starttime">
-                                   Start Time
-                                   <span class="asteriskField">
-                                    *
-                                   </span>
-                                  </label>
-
-                                  <div class="col-sm-5">
-                                   <div class="input-group clockpicker"  data-align="top" data-autoclose="true">
-                                    <div class="input-group-addon">
-                                     <i class="fa fa-clock-o">
-                                     </i>
-                                    </div>
-                                    <input class="form-control" id="starttime" name="starttime" type="text" required/>
-                                   </div>
-                                  </div>
-                                 </div>
-                                 <div class="form-group form-group-lg">
-                                  <label class="control-label col-sm-2 requiredField" for="endtime">
-                                   End Time
-                                   <span class="asteriskField">
-                                    *
-                                   </span>
-                                  </label>
-                                  <div class="col-sm-5">
-                                   <div class="input-group clockpicker"  data-align="top" data-autoclose="true">
-                                    <div class="input-group-addon">
-                                     <i class="fa fa-clock-o">
-                                     </i>
-                                    </div>
-                                    <input class="form-control" id="endtime" name="endtime" type="text" required/>
-                                   </div>
-                                  </div>
-                                 </div>
-                                 <div class="form-group form-group-lg">
-                                  <label class="control-label col-sm-2 requiredField" for="bookavail">
-                                   Duration:
-                                   <span class="asteriskField">
-                                    *
-                                   </span>
-                                  </label>
-                                  <div class="col-sm-5">
-                                   <!-- radio button -->
-													<tr>
-														
-														<td>
-															<div class="radio">
-																<label><input type="radio" name="appointmentDuration" value="30 minutes">30 Minutes</label>
-															</div>
-															<div class="radio">
-																<label><input type="radio" name="appointmentDuration" value="45 minutes">45 Minutes</label>
-															</div>
-															<div class="radio">
-																<label><input type="radio" name="appointmentDuration" value="60 minutes"?>60 Minites</label>
-															</div>
-															</div>
-														</td>
-													</tr>
-                                  </div>
-                                 </div>
-                                 <div class="form-group">
-                                  <div class="col-sm-10 col-sm-offset-2">
-                                   <button class="btn btn-primary " name="submit" type="submit">
-                                    Submit
-                                   </button>
-                                  </div>
-                                 </div>
-                                </form>
-                               </div>
-                              </div>
-                             </div>
-                            </div>                        
-                        <!-- panel content end -->
+                   
                         <!-- panel end -->
                         </div>
                     </div>
                     <!-- panel start -->
+                    <form action="<?php $_PHP_SELF ?>" method="post" >
+				<div style="text-align:center">
+				<!-- maintaining dropdown state -->
+				<?php
+    $quer = "SELECT * from doctor order by doctorLastName ";
 
+    $result=mysqli_query($con,$quer);
+
+					$scheduleStatus='';
+					$sortby='';
+                    $doctor='';
+					if (isset($_POST))
+						if (is_array($_POST))
+							if (isset($_POST['scheduleStatus'])){
+								$scheduleStatus = $_POST['scheduleStatus'];
+								$sortby =$_POST['sort'];
+                                $doctor =$_POST['doctor'];
+							}if(isset($_POST['appdate'])){
+								$appdat=date($_POST['appdate']);
+								$appdat1=date($_POST['appdate1']);
+							}else {
+								$appdat = date('Y-m-d');
+								$appdat1 = date('Y-m-t');
+
+							}
+				?>
+                For &nbsp;&nbsp;&nbsp;
+								<select name="doctor" >
+									<option value="%">All Doctors</option>
+									<?php
+									while ($doctors=mysqli_fetch_array($result)) {
+                                    ?><option value="<?php echo $doctors["doctor_id"]?>">Dr <?php echo substr($doctors["doctorFirstName"],0,1)." " .$doctors["doctorLastName"]?> </option>;<?php
+									}
+                                    echo"</select>";?>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			Show :
+			<select name="scheduleStatus">
+				
+				<option value="%">All Schedules</option>
+				<option value="Available" <?php if($scheduleStatus=='Available') echo ' selected="selected"'; ?>>All Available Schedules</option>
+				<option value="notAvailable" <?php if($scheduleStatus=='notAvailable') echo ' selected="selected"'; ?>>All Unavailable Schedules</option>
+			
+			</select>
+			Sort By: <select  name='sort'>
+			<option disabled >Ascending</option>
+                         <option value='schedule_status ASC' <?php if($sortby=='schedule_status ASC') echo ' selected="selected"'; ?>>Schedule Status  </option>
+					   <option value='schedule_date ,schedule_startTime ASC' <?php if($sortby=='schedule_date ,schedule_startTime ASC') echo ' selected="selected"'; ?>>Schedule Date  &nbsp;&nbsp;&nbsp;&nbsp;</option>
+					   <option disabled >----------</option>
+					   <option disabled >Descending</option>
+					   <option value='schedule_status DESC' <?php if($sortby=='schedule_status DESC') echo ' selected="selected"'; ?>>Schedule Status  </option>
+					   
+                       <option value='schedule_date,schedule_startTime DESC' <?php if($sortby=='schedule_date,schedule_startTime DESC') echo ' selected="selected"'; ?>>Schedule Date  &nbsp;&nbsp;&nbsp;&nbsp;</option>
+                                
+                                 </select>
+			&nbsp;&nbsp;&nbsp;&nbsp;
+			show from : <input type="date" id="date" name="appdate" value="<?php echo date("Y-m-d")?>"/>
+			&nbsp;&nbsp;&nbsp;to &nbsp;&nbsp;&nbsp; <input type="date" id="date" name="appdate1" value="<?php echo date('Y-m-t')?>">
+			&nbsp;&nbsp;&nbsp;<button class='btn btn-primary' type='submit' value='submit2' name='submit2'>Show Only</button>
+		</div>
+		</form><br>
                      <!-- panel start -->
                     <div class="panel panel-primary filterable">
 
@@ -317,18 +340,34 @@ if($_POST['appointmentType']=='daily'){
                         <table class="table table-hover table-bordered">
                             <thead>
                                 <tr class="filters">
-                                    <th><input type="text" class="form-control" placeholder="schedule_id" disabled></th>
-                                    <th><input type="text" class="form-control" placeholder="scheduleDate" disabled></th>
-                                    <th><input type="text" class="form-control" placeholder="startTime." disabled></th>
-                                    <th><input type="text" class="form-control" placeholder="endTime" disabled></th>
-                                    <th><input type="text" class="form-control" placeholder="bookAvail" disabled></th>
+                                    <th><input type="text" class="form-control" placeholder="Doctor" disabled></th>
+                                    <th><input type="text" class="form-control" placeholder="Schedule date" disabled></th>
+                                    <th><input type="text" class="form-control" placeholder="Start time." disabled></th>
+                                    <th><input type="text" class="form-control" placeholder="End time" disabled></th>
+                                    <th><input type="text" class="form-control" placeholder="Schedule Status" disabled></th>
                                     <th><input type="text" class="form-control" placeholder="Delete" disabled></th>
                                 </tr>
                             </thead>
                             
                             <?php 
+                            if(!isset($_POST['submit2'])){
                             $result=mysqli_query($con,"SELECT * FROM schedule a,doctor b WHERE a.doctor_id = b.doctor_id");
-                            
+                            }else{
+                                $scheduleStatus = $_POST['scheduleStatus'];
+                                $doctor = $_POST['doctor'];
+	                            $date1 = $_POST['appdate1'];
+                                $date = $_POST['appdate'];
+                                $sortby = $_POST['sort'];
+                                $result=mysqli_query($con,"SELECT * 
+                                                        FROM schedule a,doctor b 
+                                                        WHERE a.doctor_id = b.doctor_id
+                                                        AND a.doctor_id LIKE '$doctor'
+                                                        AND schedule_status LIKE '$scheduleStatus'
+                                                        AND schedule_date BETWEEN '$date' AND '$date1'
+                                                        ORDER BY '$sortby'");
+                        }
+
+
 
                                   
                             while ($schedule=mysqli_fetch_array($result)) {
@@ -351,7 +390,7 @@ if($_POST['appointmentType']=='daily'){
                        echo "</table>";
                        echo "<div class='panel panel-default'>";
                        echo "<div class='col-md-offset-3 pull-right'>";
-                       echo "<button class='btn btn-primary' type='submit' value='Submit' name='submit'>Update</button>";
+                    //    echo "<button class='btn btn-primary' type='submit2' value='Submit' name='submit'>Update</button>";
                         echo "</div>";
                         echo "</div>";
                         ?>
@@ -365,6 +404,132 @@ if($_POST['appointmentType']=='daily'){
         <!-- /#wrapper -->
 
 
+
+
+
+
+        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>   
+                                    </div>
+                                    <div class="modal-body">
+                                        <!-- form start -->
+                                        <form name="addSchedule" class="form-horizontal" method="post">
+                                        <h4>Enter Schedule Details.</h4>
+                                        <td>
+											<div style="text-align:center" class="radio" required>
+												<label><input type="radio" name="appointmentType" value="daily">Daily Schedule</label>
+												<label><input type="radio" name="appointmentType" value="weekly">Weekly  Schedule</label>
+												<label><input type="radio" name="appointmentType" value="monthly"?>Monthly Schedule</label>
+											</div>
+											</td>
+                                        <div class="row" style="text-align:center"> <label class="control-label col-sm-2 requiredField" for="date">
+                                   Date
+                                   <span class="asteriskField">
+                                    *
+                                   </span>
+                                  </label>
+                                            <div class="col-xs-6 col-md-9">
+                                                <input min="<?php echo date('Y-m-d')?>" value="<?php echo date('Y-m-d')?>" class="form-control" id="date" name="date" type="text" required/>
+                                            </div>
+                                            <label class="control-label col-sm-2 requiredField" for="doctor">
+                                   Doctor
+                                   <span class="asteriskField">
+                                    *
+                                   </span>
+                                  </label>
+                                            <div class="col-xs-6 col-md-9">
+                                            <select class="select form-control" id="doctor" name="doctor" required>
+                                                <?php $docSql = "SELECT doctor_id,substr(doctorFirstName,1,1) doctorFirstName,doctorLastName ,doctorSpecialty FROM doctor";
+                                                 $docRes = mysqli_query($con,$docSql);
+                                                ?>  
+                                                 <option  value="">Select Doctor</option>";<<?php
+                                                    while($doctor=mysqli_fetch_array($docRes)){
+                                                     echo "<option value=". $doctor['doctor_id']."> Dr " .$doctor['doctorFirstName']." ". $doctor['doctorLastName']." (".$doctor['doctorSpecialty']. ")</option>";
+                                                    }
+                                                    echo "</select>"
+
+                                                   ?>
+                                            </div>
+                                        </div>
+                                        <label class="control-label col-sm-2 requiredField" for="starttime">
+                                            Start Time
+                                            <span class="asteriskField">
+                                            *
+                                         </span>
+                                        </label>
+                                        <div class="col-sm-4">
+                                            <div class="input-group clockpicker"  data-align="top" data-autoclose="true">
+                                                <div class="input-group-addon">
+                                                    <i class="fa fa-clock-o">
+                                                    </i>
+                                                 </div>
+                                                <input class="form-control" id="starttime" name="starttime" type="text" required/>
+                                             </div>
+                                        </div>
+                                        <label class="control-label col-sm-2 requiredField" for="endtime">
+                                            End Time
+                                            <span class="asteriskField">
+                                            *
+                                         </span>
+                                        </label>
+                                        <div class="col-sm-4">
+                                            <div class="input-group clockpicker"  data-align="top" data-autoclose="true">
+                                                <div class="input-group-addon">
+                                                    <i class="fa fa-clock-o">
+                                                    </i>
+                                                 </div>
+                                                <input class="form-control" id="endtime" name="endtime" type="text" required/>
+                                             </div>
+                                        </div>
+                                       
+                                      <div >      
+                                 <label style="text-align:center">
+                                  Duration:
+                                   <span class="asteriskField">
+                                     *
+                                   </span>
+                                  </label><tr><td><br>
+															<div style="text-align:center" class="radio">
+																<label><input type="radio" name="appointmentDuration" value="30">30 Minutes</label>
+																<label><input type="radio" name="appointmentDuration" value="45">45 Minutes</label>
+																<label><input type="radio" name="appointmentDuration" value="60">60 Minites</label>
+                                                </div>
+                            </tr></td>
+														
+                                        
+                                       
+                                    <br>
+                                        <button class="btn btn-lg btn-primary btn-block signup-btn" type="submit" name="submit">Add Doctor Schedule</button>
+                                         </form>
+                                        <!-- form end -->
+                                        </div>
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                            <br /><br/>
+                        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
        
         <!-- jQuery -->
         <script src="../patient/assets/js/jquery.js"></script>
@@ -375,45 +540,45 @@ if($_POST['appointmentType']=='daily'){
         <!-- Latest compiled and minified JavaScript -->
          <!-- script for jquery datatable start-->
         <!-- Include Date Range Picker -->
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/js/bootstrap-datepicker.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/css/bootstrap-datepicker3.css"/>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/js/bootstrap-datepicker.min.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/css/bootstrap-datepicker3.css"/>
 
-<script>
-    $(document).ready(function(){
-        var date_input=$('input[name="date"]'); //our date input has the name "date"
-        var container=$('.bootstrap-iso form').length>0 ? $('.bootstrap-iso form').parent() : "body";
-        date_input.datepicker({
-            format: 'yyyy/mm/dd',
-            container: container,
-            todayHighlight: true,
-            autoclose: true,
-        })
-    })
-</script>
-<script type="text/javascript">
-    $('.clockpicker').clockpicker();
-</script>
- <script type="text/javascript">
-$(function() {
-$(".delete").click(function(){
-var element = $(this);
-var id = element.attr("id");
-var info = 'id=' + id;
-if(confirm("Are you sure you want to update this?"))
-{
- $.ajax({
-   type: "POST",
-   url: "deleteschedule.php",
-   data: info,
-   success: function(){
- }
-});
-  $(this).parent().parent().fadeOut(300, function(){ $(this).remove();});
- }
-return false;
-});
-});
-</script>
+        <script>
+            $(document).ready(function(){
+                var date_input=$('input[name="date"]'); //our date input has the name "date"
+                var container=$('.bootstrap-iso form').length>0 ? $('.bootstrap-iso form').parent() : "body";
+                date_input.datepicker({
+                    format: 'yyyy/mm/dd',
+                    container: container,
+                    todayHighlight: true,
+                    autoclose: true,
+                })
+            })
+        </script>
+        <script type="text/javascript">
+            $('.clockpicker').clockpicker();
+        </script>
+        <script type="text/javascript">
+        $(function() {
+            $(".delete").click(function(){
+                var element = $(this);
+                var id = element.attr("id");
+                var info = 'id=' + id;
+                if(confirm("Are you sure you want to update this?"))
+                {
+                    $.ajax({
+                        type: "POST",
+                        url: "deleteschedule.php",
+                        data: info,
+                        success: function(){
+                    }
+                });
+            $(this).parent().parent().fadeOut(300, function(){ $(this).remove();});
+            }
+            return false;
+        });
+        });
+        </script>
 <script type="text/javascript">
             /*
             Please consider that the JS part isn't production ready at all, I just code it to show the concept of merging filters and titles together !

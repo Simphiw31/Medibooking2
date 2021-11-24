@@ -124,6 +124,7 @@ $userRow=mysqli_fetch_array($res,MYSQLI_ASSOC);
                                     <th><input type="text" class="form-control" placeholder="ContactNo." disabled></th>
                                     <th><input type="text" class="form-control" placeholder="Email" disabled></th> 
                                     <th><input type="text" class="form-control" placeholder="Gender" disabled></th>
+                                    <th><input type="text" class="form-control" placeholder="Date Created" disabled></th>
                                     <th><input type="text" class="form-control" placeholder="Address" disabled></th>
                                 </tr>
                             </thead>
@@ -143,6 +144,7 @@ $userRow=mysqli_fetch_array($res,MYSQLI_ASSOC);
                                     echo "<td>" . $patientRow['patientPhone'] . "</td>";
                                     echo "<td>" . $patientRow['patientEmail'] . "</td>";
                                     echo "<td>" . $patientRow['patientGender'] . "</td>";
+                                    echo "<td>" . $patientRow['createdate'] . "</td>";
                                     echo "<td>" . $patientRow['patientStreetAddress'] . "</td>";
                                     echo "<form method='POST'>";
                                

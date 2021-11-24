@@ -220,7 +220,7 @@ header( 'Location: doctorprofile.php' ) ;
                                                     
                                                     
                                                     <tr>
-                                                        <td>Dosctor Specialty</td>
+                                                        <td>Doctor Specialty</td>
                                                         <td><input type="text" class="form-control" name="doctorSpecialty" value="<?php echo $userRow['doctorSpecialty']; ?>"  disabled/></td>
                                                     </tr>
                                                     <tr>

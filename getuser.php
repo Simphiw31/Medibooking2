@@ -3,8 +3,11 @@
 include_once 'assets/conn/dbconnect.php';
 //include ;
 $q = $_GET['q'];
-// echo $q;
-$res = mysqli_query($con,"SELECT * FROM schedule WHERE schedule_date='$q'");// AND doctor_id='$docID'");
+// echo $q;,
+$res = mysqli_query($con,"SELECT schedule_date,schedule_startTime,schedule_endTime,schedule_status,a.doctor_id ,b.doctorLastName
+                        FROM schedule a,doctor b
+                        WHERE  schedule_date ='$q' 
+                        AND a.doctor_id = b.doctor_id");// AND doctor_id='$docID'");
 
 
 
@@ -33,6 +36,7 @@ die("Error running $sql: " . mysqli_error());
              echo "   <table class='table table-hover'>";
         echo " <thead>";
             echo " <tr>";
+                echo "<th>Dr Name</th>";
                 echo " <th>Date</th>";
                echo "  <th>Start</th>";
                echo "  <th>End</th>";
@@ -54,6 +58,7 @@ die("Error running $sql: " . mysqli_error());
                 $avail="primary";
                 
             }
+                echo "<td>Dr " . $row['doctorLastName'] . "</td>";
                 echo "<td>" . $row['schedule_date'] . "</td>";
                 echo "<td>" . $row['schedule_startTime'] . "</td>";
                 echo "<td>" . $row['schedule_endTime'] . "</td>";

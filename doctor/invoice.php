@@ -92,11 +92,11 @@ $userRow=mysqli_fetch_array($res,MYSQLI_ASSOC);
 
                 <tr class="item">
                     <td>
-                        appointment Day
+                        appointment Status
                     </td>
                     
                     <td>
-                        <?php echo $userRow['scheduleDay'];?>
+                        <?php echo $userRow['appointment_status'];?>
                     </td>
                 </tr>
                 

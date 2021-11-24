@@ -160,11 +160,12 @@ if (isset($_POST['submit'])) {
                                     <th><input type="text" class="form-control" placeholder="Name" disabled></th>
                                     <th><input type="text" class="form-control" placeholder="ContactNo." disabled></th>
                                      <th><input type="text" class="form-control" placeholder="Email" disabled></th> 
+                                     <th><input type="text" class="form-control" placeholder="Added By" disabled></th>
                                 </tr>
                             </thead>
                             
                             <?php 
-                            $result=mysqli_query($con,"SELECT * FROM receptionist");
+                            $result=mysqli_query($con,"SELECT a.*,b.* FROM receptionist a ,admin b WHERE a.admin_id = b.admin_id");
                             
 
                                   
@@ -177,6 +178,7 @@ if (isset($_POST['submit'])) {
                                     echo "<td>" . $receptionistRow['receptionistLastName'] .' '. $receptionistRow['receptionistFirstName'] . "</td>";
                                     echo "<td>" . $receptionistRow['receptionistPhone'] . "</td>";
                                     echo "<td>" . $receptionistRow['receptionistEmail'] . "</td>";
+                                    echo "<td>" . $receptionistRow['adminLastName'] .' '. $receptionistRow['adminFirstName'] . "</td>";
                                     echo "<form method='POST'>";
                                     echo "<td class='text-center'><a href='#' id='".$receptionistRow['receptionist_id']."' class='delete'><span class='fa fa-trash' aria-hidden='true'></span></a>
                             </td>";
@@ -218,8 +220,8 @@ if (isset($_POST['submit'])) {
                                                 <input type="text" name="surname" value="" class="form-control input-lg" placeholder="Receptionist's Last Name" required />
                                             </div>
                                         </div>
-                                        <input type="text" name="email" value="" class="form-control input-lg" placeholder="Doctor's Email"  required/>
-                                        <input type="text" name="phone" value="" class="form-control input-lg" placeholder="Doctor's phone number"  required/>
+                                        <input type="text" name="email" value="" class="form-control input-lg" placeholder="Receptionist's Email"  required/>
+                                        <input type="text" name="phone" value="" class="form-control input-lg" placeholder="Receptionist's phone number"  required/>
                                         
                                         
                                         

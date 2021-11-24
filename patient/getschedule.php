@@ -3,7 +3,7 @@ session_start();
 include_once '../assets/conn/dbconnect.php';
 
 //    get date from selected
-$date = $_GET['q'];
+$date =strtotime( $_GET['q']);
 // get doctor from selected
 $doc = $GET['p'];
 $res = mysqli_query($con,"SELECT * FROM schedule WHERE schedule_date='$date' AND schedule_status = 'Available' ");//AND doctor_id LIKE '$docID'");

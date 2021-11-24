@@ -10,8 +10,10 @@ if (isset($_GET['schedule_date']) && isset($_GET['appointment_ID'])) {
 	$appdate =$_GET['schedule_date'];
 	$appointment_ID = $_GET['appointment_ID'];
 }
-$res = mysqli_query($con,"SELECT a.*, b.* FROM schedule a INNER JOIN patient b
-WHERE a.scheduleDate='$appdate' AND schedule_id='$appointment_ID' AND b.patient_id= '$session'");
+$res = mysqli_query($con,"SELECT a.*, b.*,c.* FROM schedule a INNER JOIN patient b
+							JOIN doctor c
+							ON c.doctor_id = a.doctor_id
+WHERE a.schedule_date='$appdate' AND schedule_id='$appointment_ID' AND b.patient_id= '$session'");
 $userRow=mysqli_fetch_array($res,MYSQLI_ASSOC);
 
 
@@ -21,19 +23,21 @@ if (isset($_POST['appointment'])) {
 $patient_id = mysqli_real_escape_string($con,$userRow['patient_id']);
 $schedule_id = mysqli_real_escape_string($con,$appointment_ID);
 $symptom = mysqli_real_escape_string($con,$_POST['symptom']);
-$comment = mysqli_real_escape_string($con,$_POST['comment']);
-$avail = "notavail";
+$docId = mysqli_real_escape_string($con,$_POST['doctor']);
+$appdate =$_GET['schedule_date'];
+$appType = "Consultation";
+$avail = "notAvailalable";
+$status = "Pending";
 
+$query = "INSERT INTO appointment (  patient_id , schedule_id , appointment_symptoms , appointment_type,doctor_id ,appointment_status,appointment_diagnoses,appointment_clinicalNotes )
+			VALUES ( '$patient_id', '$schedule_id', '$symptom', '$appType','$docID' ,'$status','','') ";
 
-$query = "INSERT INTO appointment (  patient_id , schedule_id , appSymptom , appComment  )
-VALUES ( '$patient_id', '$schedule_id', '$symptom', '$comment') ";
-
-//update table appointment schedule
-$sql = "UPDATE schedule SET bookAvail = '$avail' WHERE schedule_id = $schedule_id" ;
-$scheduleres=mysqli_query($con,$sql);
-if ($scheduleres) {
-	$btn= "disable";
-} 
+// update table appointment schedule
+// $sql = "UPDATE schedule SET schedule_status = '$avail' WHERE schedule_id = $schedule_id" ;
+// $scheduleres=mysqli_query($con,$sql);
+// if ($scheduleres) {
+// 	$btn= "disable";
+// } 
 
 $result = mysqli_query($con,$query);
 if( $result )
@@ -45,7 +49,7 @@ alert('Appointment made successfully.');
 </script>
 <?php
 
-header("Location: appEmail.php?patient_id='$patient_id'");
+header("Location: patientapplist.php?patient_id='$patient_id'");
 }
 else
 {
@@ -130,7 +134,7 @@ header("Location: patient.php");
 			<section style="padding-bottom: 50px; padding-top: 50px;">
 				<div class="row">
 					<!-- start -->
-					<!-- USER PROFILE ROW STARTS-->
+					<!-- USER PROFILE ROW STARTS
 					<div class="row">
 					<div class="col-md-3 col-sm-3">
 							
@@ -143,7 +147,7 @@ header("Location: patient.php");
 									<hr />
 								</div>
 							</div>
-						</div>
+						</div> -->
 						
 						<div class="col-md-9 col-sm-9  user-wrapper">
 							<div class="description">
@@ -171,15 +175,25 @@ header("Location: patient.php");
 													Time: <?php echo $userRow['schedule_startTime'] ?> - <?php echo $userRow['schedule_endTime'] ?><br>
 												</div>
 											</div>
+											<div class="panel panel-default">
+												<div class="panel-heading">Doctor Information</div>
+												<div class="panel-body">
+													Doctor: Dr <?php echo substr($userRow['doctorFirstName'],0,1) ." ". $userRow['doctorLastName']?><br>
+													Profession: <?php echo $userRow['doctorSpecialty'] ?> <br>
+													<?php $_POST['doctor'] = $userRow['doctor_id'];?>
+												</div>
+											</div>
+
+											
 											
 											<div class="form-group">
 												<label for="recipient-name" class="control-label">Symptom:</label>
 												<input type="text" class="form-control" name="symptom" required>
 											</div>
-											<div class="form-group">
+											<!-- <div class="form-group">
 												<label for="message-text" class="control-label">Comment:</label>
 												<textarea class="form-control" name="comment" required></textarea>
-											</div>
+											</div> -->
 											<div class="form-group">
 												<input type="submit" name="appointment" id="submit" class="btn btn-primary" value="Make Appointment">
 											</div>
